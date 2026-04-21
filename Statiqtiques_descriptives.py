@@ -4,18 +4,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import math
+import requests
+import pandas as pd
+from io import StringIO
 from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
 
 # =========================== FONCTIONS ===========================
+def load_data_from_gdrive(url):
+    """
+    Télécharge un fichier CSV depuis un lien de partage Google Drive.
+    """
+    # Extraire l'ID du fichier depuis l'URL
+    if "file/d/" in url:
+        file_id = url.split("file/d/")[1].split("/")[0]
+    elif "id=" in url:
+        file_id = url.split("id=")[1]
+    else:
+        raise ValueError("Impossible d'extraire l'ID du fichier depuis l'URL fournie.")
+    
+    # Construire l'URL de téléchargement direct
+    download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    
+    print("Téléchargement du fichier depuis Google Drive...")
+    try:
+        response = requests.get(download_url)
+        response.raise_for_status()  # Vérifie si la requête a réussi
+        data = pd.read_csv(StringIO(response.text))
+        print("Téléchargement réussi !")
+        return data
+    except requests.exceptions.RequestException as e:
+        print(f"Erreur lors du téléchargement : {e}")
+        return None
 
-def load_data(filepath):
-    """Charge le dataset des options."""
-    data = pd.read_csv(filepath)
-    print(f"Fichier chargé : {filepath}")
-    print(f"Dimensions : {data.shape}")
-    return data
+
 
 def clean_data(df):
     """Gère les valeurs manquantes et ajoute des features dérivées."""
@@ -226,8 +249,9 @@ def plot_iv_maturity_correlation(df):
 
 # =========================== EXÉCUTION DIRECTE ===========================
 # 1. Chargement des données
-file_path = r"C:\Users\ERAZER\Desktop\options_dataset.csv"
-data = load_data(file_path)
+file_url = "https://drive.google.com/file/d/12KymJi6lZMmPRmaLB33klfMXRDTrIYJ1/view?usp=sharing"
+data = load_data_from_gdrive(file_url)file_url = "https://drive.google.com/file/d/12KymJi6lZMmPRmaLB33klfMXRDTrIYJ1/view?usp=sharing"
+data = load_data_from_gdrive(file_url)
 
 # 2. Nettoyage et feature engineering
 data = clean_data(data)
