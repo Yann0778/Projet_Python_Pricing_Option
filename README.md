@@ -11,7 +11,7 @@
 ## Table des matières
 
 1. [Objectif du projet](#1-objectif-du-projet)
-2. [Construction de la base de données des options]
+2. [Construction de la base de données des options](#2-Construction-de-la-base-de-données-des-options)
 3. [Pourquoi le mid_price ?](#2-pourquoi-le-mid_price-)
 4. [Structure du projet](#3-structure-du-projet)
 5. [Pipeline](#4-pipeline)
@@ -23,7 +23,7 @@
 11. [Outputs générés](#10-outputs-générés)
 12. [Métriques comparatives](#11-métriques-comparatives)
 13. [Paramètres clés](#12-paramètres-clés)
-[Bibliographie]
+14. [Bibliographie](#14-Bibliographie)
 
 ---
 
