@@ -351,20 +351,6 @@ Ou manuellement :
 pip install numpy pandas scikit-learn xgboost scipy matplotlib seaborn joblib
 ```
 
----
-
-## 9. Configuration
-
-> ⚠️ **À faire avant de lancer** — le chemin du fichier CSV est hardcodé dans chaque script. Il faut l'adapter à votre machine.
-
-```python
-# Ligne à modifier dans chacun des 4 scripts
-data = pd.read_csv(r"C:\Users\ERAZER\Desktop\options_dataset.csv")
-
-# Exemples selon votre OS :
-data = pd.read_csv(r"C:\Users\VotreNom\Downloads\options_dataset.csv")   # Windows
-data = pd.read_csv("/home/user/data/options_dataset.csv")                 # macOS / Linux
-```
 
 ---
 
