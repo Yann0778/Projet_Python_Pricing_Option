@@ -354,7 +354,7 @@ pip install numpy pandas scikit-learn xgboost scipy matplotlib seaborn joblib
 
 ---
 
-## 10. Exécution
+## 9. Exécution
 
 > ⚠️ **Ordre obligatoire.** `BlackScholes.py` génère `split_indices.json` dont dépendent RF et XGBoost pour leur évaluation hors échantillon.
 
@@ -374,7 +374,7 @@ python XGBoost.py
 
 ---
 
-## 11. Outputs générés
+## 10. Outputs générés
 
 | Fichier | Description | Généré par |
 |---------|-------------|------------|
@@ -386,7 +386,7 @@ python XGBoost.py
 
 ---
 
-## 12. Métriques comparatives
+## 11. Métriques comparatives
 
 Les trois modèles sont évalués sur le **même test set 20%**. Les valeurs exactes dépendent du dataset et des hyperparamètres retenus par la recherche aléatoire.
 
@@ -402,7 +402,7 @@ Les trois modèles sont évalués sur le **même test set 20%**. Les valeurs exa
 
 ---
 
-## 13. Paramètres clés
+## 12. Paramètres clés
 
 | Paramètre | Valeur | Fichier(s) |
 |-----------|--------|-----------|
