@@ -128,6 +128,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import warnings, json
+import requests
+import pandas as pd
+from io import StringIO
 warnings.filterwarnings("ignore")
 
 from scipy.stats import norm
@@ -143,7 +146,35 @@ print("=" * 60)
 print("ÉTAPE 1 — Chargement et construction du mid_price")
 print("=" * 60)
 
-df = pd.read_csv(r"C:\Users\DELL\Downloads\options_dataset.csv")
+def load_data_from_gdrive(url):
+    """
+    Télécharge un fichier CSV depuis un lien de partage Google Drive.
+    """
+    # Extraire l'ID du fichier depuis l'URL
+    if "file/d/" in url:
+        file_id = url.split("file/d/")[1].split("/")[0]
+    elif "id=" in url:
+        file_id = url.split("id=")[1]
+    else:
+        raise ValueError("Impossible d'extraire l'ID du fichier depuis l'URL fournie.")
+    
+    # Construire l'URL de téléchargement direct
+    download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    
+    print("Téléchargement du fichier depuis Google Drive...")
+    try:
+        response = requests.get(download_url)
+        response.raise_for_status()  # Vérifie si la requête a réussi
+        data = pd.read_csv(StringIO(response.text))
+        print("Téléchargement réussi !")
+        return data
+    except requests.exceptions.RequestException as e:
+        print(f"Erreur lors du téléchargement : {e}")
+        return None
+
+file_url = "https://drive.google.com/file/d/12KymJi6lZMmPRmaLB33klfMXRDTrIYJ1/view?usp=sharing"
+df = load_data_from_gdrive(file_url)
+
 df["bid"] = df["bid"].fillna(df["bid"].median())
 df["mid_price"] = (df["bid"] + df["ask"]) / 2
 df = df[df["mid_price"] > 0].reset_index(drop=True)
