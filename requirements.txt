@@ -1,7 +1,17 @@
-pandas>=1.5.0
+# ── Core data science ─────────────────────────────────────────
 numpy>=1.23.0
-matplotlib>=3.6.0
+pandas>=1.5.0
+
+# ── Machine learning ──────────────────────────────────────────
 scikit-learn>=1.2.0
 xgboost>=1.7.0
-seaborn>=0.11.0
+
+# ── Statistics & finance ──────────────────────────────────────
 scipy>=1.7.0
+
+# ── Visualisation ─────────────────────────────────────────────
+matplotlib>=3.6.0
+seaborn>=0.11.0
+
+# ── Serialisation des modèles ─────────────────────────────────
+joblib>=1.2.0
