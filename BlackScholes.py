@@ -144,7 +144,8 @@ print("ÉTAPE 1 — Chargement et construction du mid_price")
 print("=" * 60)
 
 df = pd.read_csv(r"C:\Users\DELL\Downloads\options_dataset.csv")
-df["mid_price"] = np.where(df["bid"].isna(), df["ask"]/2, (df["bid"]+df["ask"])/2)
+df["bid"] = df["bid"].fillna(df["bid"].median())
+df["mid_price"] = (df["bid"] + df["ask"]) / 2
 df = df[df["mid_price"] > 0].reset_index(drop=True)
 
 # Feature engineering (identique script 1)
