@@ -44,7 +44,7 @@ warnings.filterwarnings('ignore')
 # =============================================================================
 # 2. CHARGEMENT DES DONNÉES
 # =============================================================================
-# Charger le jeu de données des options (adapter le chemin si nécessaire)
+# Charger le jeu de données des options
 data = pd.read_csv(r"C:\Users\ERAZER\Desktop\options_dataset.csv")
 
 # =============================================================================
