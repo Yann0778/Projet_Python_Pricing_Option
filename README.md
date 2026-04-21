@@ -1,251 +1,289 @@
 # Option Pricing with Machine Learning
-> Comparaison de trois approches pour prédire le **mid_price** d'options AAPL: Black-Scholes, Random Forest et réseau de neurones MLP.
+> Comparaison de trois approches ML pour prédire le **mid_price** d'options AAPL: Black-Scholes, Random Forest et XGBoost précédée d'une analyse exploratoire complète.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?style=flat-square&logo=scikit-learn&logoColor=white)
+![XGBoost](https://img.shields.io/badge/XGBoost-Gradient%20Boosting-006400?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 ---
 
 ## Table des matières
 
-1. [Objectif du projet](#objectif-du-projet)
-2. [Pourquoi le mid_price ?](#pourquoi-le-mid_price-)
-3. [Structure du projet](#structure-du-projet)
-4. [Pipeline](#pipeline)
-5. [Description des scripts](#description-des-scripts)
-6. [Features utilisées](#features-utilisées-11-variables)
-7. [Installation](#installation)
-8. [Configuration](#configuration)
-9. [Exécution](#exécution)
-10. [Outputs générés](#outputs-générés)
-11. [Métriques comparatives](#métriques-comparatives-test-set-20)
-12. [Paramètres clés](#paramètres-clés)
+1. [Objectif du projet](#1-objectif-du-projet)
+2. [Pourquoi le mid_price ?](#2-pourquoi-le-mid_price-)
+3. [Structure du projet](#3-structure-du-projet)
+4. [Pipeline](#4-pipeline)
+5. [Description des scripts](#5-description-des-scripts)
+6. [Features utilisées](#6-features-utilisées)
+7. [Installation](#7-installation)
+8. [Configuration](#8-configuration)
+9. [Exécution](#9-exécution)
+10. [Outputs générés](#10-outputs-générés)
+11. [Métriques comparatives](#11-métriques-comparatives)
+12. [Paramètres clés](#12-paramètres-clés)
 
 ---
 
-## Objectif du projet
+## 1. Objectif du projet
 
-Le pricing d'options est un problème central en finance de marché : déterminer la juste valeur d'un contrat d'option avant qu'il ne soit échangé. Le modèle de référence historique, Black-Scholes (1973), repose sur des hypothèses fortes: volatilité constante, marchés continus, absence de friction, qui sont rarement vérifiées en pratique. Il en résulte des biais systématiques, notamment sur les options très en dehors ou très en dedans de la monnaie (OTM/ITM), et sur les maturités courtes.
+Le **pricing d'options** est un problème central en finance de marché : il s'agit de déterminer la juste valeur d'un contrat d'option avant qu'il ne soit échangé. Le modèle de référence historique, **Black-Scholes (1973)**, repose sur des hypothèses fortes: volatilité constante, marchés continus, absence de friction qui sont rarement vérifiées en pratique. Il en résulte des **biais systématiques**, notamment sur les options très en dehors ou très en dedans de la monnaie (OTM/ITM) et sur les maturités courtes.
 
-Ce projet cherche à répondre à une question concrète : **les modèles de machine learning peuvent-ils faire mieux que Black-Scholes pour prédire le prix de marché réel d'une option ?**
+Ce projet cherche à répondre à une question concrète :
 
-Pour y répondre, trois approches sont comparées sur des données réelles d'options sur l'action Apple (AAPL) :
+> **Les modèles de machine learning peuvent-ils faire mieux que Black-Scholes pour prédire le prix de marché réel d'une option ?**
 
-- **Black-Scholes** sert de baseline analytique et permet de quantifier les biais du modèle théorique face aux prix observés.
-- **Random Forest** est un modèle d'ensemble qui apprend directement depuis les données sans hypothèse sur la dynamique du sous-jacent. Il capture les non-linéarités que BS ne peut pas modéliser.
-- **MLP (réseau de neurones multicouche)** est une approche plus flexible encore, capable d'apprendre des représentations profondes des features d'options.
+Pour y répondre, le projet suit une progression en quatre étapes sur des données réelles d'options sur l'action **Apple (AAPL)** :
 
-Les trois modèles sont évalués sur le même test set (20% des données, split stratifié) avec des métriques communes: RMSE, MAE, R², biais et MAPE pour permettre une comparaison équitable et reproductible.
+- **Statistiques descriptives** : explorer la structure des données, les distributions de volatilité implicite, le smile de volatilité, les corrélations entre variables.
+- **Black-Scholes** : établir un benchmark analytique rigoureux et quantifier ses biais structurels face aux prix observés.
+- **Random Forest** : exploiter un modèle d'ensemble qui apprend directement depuis les données, sans hypothèse sur la dynamique du sous-jacent, et qui capture les non-linéarités que BS ne peut pas modéliser.
+- **XGBoost** : aller plus loin avec le gradient boosting, réputé pour sa précision sur des données tabulaires financières, avec early stopping et optimisation poussée des hyperparamètres.
+
+Les trois modèles de pricing sont évalués sur le **même test set (20% des données, split stratifié)** avec des métriques communes: RMSE, MAE, R², biais et MAPE pour garantir une comparaison équitable et **entièrement reproductible**.
 
 ---
 
-## Pourquoi le mid_price ?
+## 2. Pourquoi le mid_price ?
 
 La cible de tous les modèles est `mid_price = (bid + ask) / 2`.
 
-| Métrique | Description |
+| Variable | Description |
 |----------|-------------|
-| `lastPrice` | Dernier trade — potentiellement *stale* (vieux) |
-| `mid_price` | Centre du spread actuel → reflète l'état du carnet en temps réel ✓ |
+| `lastPrice` | Dernier trade exécuté — potentiellement *stale* (obsolète) |
+| `mid_price` | Centre du spread bid/ask — reflète l'état du carnet en temps réel ✓ |
+
+Le `lastPrice` peut dater de plusieurs heures sur des options peu liquides, là où le `mid_price` est toujours calculable à partir des cotations en cours.
 
 ---
 
-## Structure du projet
+## 3. Structure du projet
 
 ```
 option-pricing/
-├── RandomForest.py          # Script 1/3 — Random Forest
-├── BlackScholes.py          # Script 2/3 — Black-Scholes baseline
-├── ReseauDeNeuronne.py      # Script 3/3 — MLP + comparaison finale
-├── outputs/                 # Généré automatiquement à l'exécution
-│   ├── rf_midprice.pkl
-│   ├── mlp_midprice.pkl
-│   ├── split_indices.json
-│   └── options_with_bs_midprice.csv
+│
+├── Statiqtiques_descriptives.py   # Script 1/4 — Analyse exploratoire (EDA)
+├── BlackScholes.py                # Script 2/4 — Baseline Black-Scholes + Grecques
+├── RandomForest.py                # Script 3/4 — Random Forest
+├── XGBoost.py                     # Script 4/4 — XGBoost + comparaison finale
+│
+├── outputs/                       # Généré automatiquement à l'exécution
+│   ├── split_indices.json             # Indices train/test partagés entre scripts
+│   ├── options_with_bs_midprice.csv   # Dataset enrichi avec prix BS et Grecques
+│   ├── bs_midprice_results.png
+│   ├── rf_midprice_results.png
+│   └── xgb_midprice_results.png
+│
+├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## Pipeline
+## 4. Pipeline
 
 ```
 options_dataset.csv
-       │
-       ▼
+        │
+        ▼
+┌──────────────────────────────────────┐
+│  Script 1 — Statistiques descriptives│
+│  EDA, smile de vol, corrélations      │
+└──────────────────────────────────────┘
+        │
+        ▼
   mid_price = (bid + ask) / 2
-       │
-       ▼
-  Feature Engineering (11 variables)
-       │
-       ▼
-  Train / Test split 80/20 (stratifié sur is_call)
-       │
-       ├──▶ Script 1 : Random Forest   →  rf_midprice.pkl
-       ├──▶ Script 2 : Black-Scholes   →  options_with_bs_midprice.csv
-       └──▶ Script 3 : MLP             →  mlp_midprice.pkl + comparaison finale
+  Feature Engineering (7 variables)
+  Train / Test split 80/20 stratifié
+        │
+        ├──▶ Script 2 : Black-Scholes  →  bs_midprice_results.png
+        │                                  options_with_bs_midprice.csv
+        │                                  split_indices.json
+        │
+        ├──▶ Script 3 : Random Forest  →  rf_midprice_results.png
+        │                                  (lit split_indices.json)
+        │
+        └──▶ Script 4 : XGBoost        →  xgb_midprice_results.png
+                                           comparaison finale BS / RF / XGB
 ```
 
 ---
 
-## Description des scripts
+## 5. Description des scripts
 
-### `RandomForest.py` — Script 1/3
+### `Statiqtiques_descriptives.py` — Script 1/4
 
-Modèle ML principal. Entraîne un Random Forest avec optimisation par GridSearchCV.
+Analyse exploratoire complète des données avant toute modélisation. Ce script ne produit pas de modèle, il sert à comprendre la structure des données.
 
 **Étapes :**
-1. Chargement du CSV et construction du `mid_price`
-2. Feature engineering (11 variables)
-3. Split 80/20 stratifié, sauvegarde des indices dans `split_indices.json`
-4. Baseline RF (100 estimateurs)
-5. Cross-validation 5-fold
-6. GridSearchCV (32 combinaisons)
-7. Évaluation finale sur le test set
-8. Analyse de l'importance des features (MDI + Permutation)
-9. Visualisations → `rf_midprice_results.png`
-10. Sauvegarde du modèle → `outputs/rf_midprice.pkl`
+1. Chargement du CSV et aperçu des dimensions
+2. Nettoyage : imputation des valeurs manquantes (`bid`, `volume`) par la médiane
+3. Feature engineering exploratoire (`mid_price`, `spread`, `log_moneyness`, `intrinsic_value`)
+4. Statistiques descriptives globales
+5. Matrice de corrélation des variables numériques
+6. Smile de volatilité implicite par échéance (calls vs puts)
+7. Boxplots de la volatilité implicite par échéance
+8. Distribution du moneyness et prime vs strike
+9. Heatmap de corrélation IV × maturité par niveau de moneyness
 
 ---
 
-### `BlackScholes.py` — Script 2/3
+### `BlackScholes.py` — Script 2/4
 
-Modèle analytique de référence. Implémente la formule de Black-Scholes et calcule les Grecques.
+Baseline analytique. Implémente la formule de Black-Scholes vectorisée et calcule les Grecques sur l'ensemble du dataset. **Génère également `split_indices.json`** — le fichier de référence qui garantit que RF et XGBoost sont évalués sur exactement le même test set.
 
 **Étapes :**
-1. Chargement et feature engineering (identique Script 1)
-2. Formule BS vectorisée + Grecques (δ, γ, ν, θ, ρ)
-3. Application sur le dataset complet
-4. Métriques BS vs `mid_price` (dataset complet)
-5. Analyse des biais structurels par moneyness et maturité
-6. BS évalué sur le même test set 20% que le RF (via `split_indices.json`)
-7. Visualisations → `bs_midprice_results.png`
-8. Export dataset enrichi → `outputs/options_with_bs_midprice.csv`
+1. Chargement et construction du `mid_price` (bid NaN → ask/2)
+2. Formule BS vectorisée (calls et puts)
+3. Calcul des Grecques : δ (delta), γ (gamma), ν (vega), θ (theta), ρ (rho)
+4. Application sur le dataset complet
+5. Métriques BS vs `mid_price` — dataset complet, calls séparés, puts séparés
+6. Analyse des biais structurels par bucket de moneyness (Deep OTM → Deep ITM) et maturité
+7. Sauvegarde du split 80/20 → `outputs/split_indices.json`
+8. Visualisations → `bs_midprice_results.png`
+9. Export du dataset enrichi → `outputs/options_with_bs_midprice.csv`
 
 **Paramètre financier :**
 ```python
-R_FREE = 0.043  # Taux Fed 2026 à adapter si nécessaire
+R_FREE = 0.043  # Taux Fed 2026 — à adapter si nécessaire
 ```
 
 ---
 
-### `ReseauDeNeuronne.py` — Script 3/3
+### `RandomForest.py` — Script 3/4
 
-MLP sklearn avec normalisation, GridSearch sur l'architecture, puis tableau comparatif final des 3 modèles.
+Premier modèle ML. Random Forest entraîné et optimisé par `RandomizedSearchCV` sur 100 combinaisons. Utilise le split défini par `BlackScholes.py` pour garantir la comparabilité des résultats.
 
 **Étapes :**
-1. Chargement et feature engineering (identique Scripts 1 & 2)
-2. StandardScaler (fit sur X_train uniquement — pas de data leakage)
-3. MLP baseline `(128, 64)` ReLU, Adam, early stopping
-4. Cross-validation 5-fold (Pipeline scaler + MLP)
-5. GridSearchCV (30 combinaisons d'architecture et régularisation)
-6. Évaluation MLP optimisé
-7. Recalcul BS et chargement RF sur le même test set
-8. Visualisations complètes + tableau de synthèse → `mlp_midprice_comparison.png`
-9. Tableau terminal final avec classement et vainqueur 
-10. Sauvegarde → `outputs/mlp_midprice.pkl`
+1. Chargement, nettoyage et feature engineering (7 variables)
+2. Chargement du split 80/20 depuis `outputs/split_indices.json`
+3. `RandomizedSearchCV` (100 combinaisons, CV 5-fold)
+4. Évaluation finale sur le test set (MAE, MSE, RMSE, R²)
+5. Importance des features : MDI + Permutation Importance
+6. Visualisations → `rf_midprice_results.png`
 
 ---
 
-## Features utilisées (11 variables)
+### `XGBoost.py` — Script 4/4
 
-| Catégorie | Features |
-|-----------|----------|
-| Marché | `strike`, `spot`, `impliedVolatility`, `time_to_maturity` |
-| Engineered | `log_moneyness`, `intrinsic_value`, `vol_sqrt_t` |
-| Flags | `is_call` (0/1), `itm` (0/1) |
-| Liquidité | `spread` (ask − bid), `log_volume` |
+Modèle ML final. XGBoost avec triple split (train / validation / test), `RandomizedSearchCV` et early stopping.
+
+**Étapes :**
+1. Chargement, nettoyage et feature engineering (7 variables)
+2. Triple split : 64% train / 16% validation / 20% test (stratifié)
+3. `RandomizedSearchCV` (100 combinaisons, CV 5-fold)
+4. Entraînement final avec early stopping (patience = 50 rounds) sur le set de validation
+5. Évaluation finale (MAE, MSE, RMSE, R²)
+6. Importance des features : MDI + Permutation Importance
+7. Visualisations → `xgb_midprice_results.png`
 
 ---
 
-## Installation
+## 6. Features utilisées
 
-### Prérequis
+Les 7 variables suivantes sont communes aux scripts RF et XGBoost :
 
-- Python ≥ 3.10
+| Catégorie | Feature | Description |
+|-----------|---------|-------------|
+| Marché | `spot` | Prix du sous-jacent |
+| Marché | `strike` | Prix d'exercice |
+| Marché | `time_to_maturity` | Maturité en années |
+| Engineered | `log_moneyness` | log(spot / strike) |
+| Engineered | `intrinsic_value` | max(S−K, 0) pour call ; max(K−S, 0) pour put |
+| Engineered | `log_volume` | log(volume) — proxy de liquidité |
+| Flag | `is_call` | 1 = call, 0 = put |
 
-### Dépendances
+> `BlackScholes.py` utilise en plus `impliedVolatility` pour calibrer le modèle directement aux conditions de marché.
+
+---
+
+## 7. Installation
+
+**Prérequis** : Python ≥ 3.10
 
 ```bash
-pip install numpy pandas matplotlib scikit-learn scipy joblib
+pip install -r requirements.txt
+```
+
+Ou manuellement :
+
+```bash
+pip install numpy pandas scikit-learn xgboost scipy matplotlib seaborn joblib
 ```
 
 ---
 
-## Configuration
+## 8. Configuration
 
-> ⚠️ **À faire avant de lancer** : adapter le chemin du fichier CSV dans chacun des 3 scripts.
+> ⚠️ **À faire avant de lancer** — le chemin du fichier CSV est hardcodé dans chaque script. Il faut l'adapter à votre machine.
 
 ```python
-# Ligne à modifier dans RandomForest.py, BlackScholes.py, ReseauDeNeuronne.py
-df = pd.read_csv(r"C:\Users\DELL\Downloads\options_dataset.csv")
+# Ligne à modifier dans chacun des 4 scripts
+data = pd.read_csv(r"C:\Users\ERAZER\Desktop\options_dataset.csv")
 
-# Remplacer par votre chemin, exemples :
-df = pd.read_csv(r"C:\Users\VotreNom\Downloads\options_dataset.csv")  # Windows
-df = pd.read_csv("/home/user/data/options_dataset.csv")                # macOS / Linux
+# Exemples selon votre OS :
+data = pd.read_csv(r"C:\Users\VotreNom\Downloads\options_dataset.csv")   # Windows
+data = pd.read_csv("/home/user/data/options_dataset.csv")                 # macOS / Linux
 ```
 
 ---
 
-## Exécution
+## 9. Exécution
 
-> ⚠️ **Les scripts doivent être lancés dans l'ordre.** Le Script 1 génère `split_indices.json` et `rf_midprice.pkl` dont dépendent les suivants.
+> ⚠️ **Ordre obligatoire.** `BlackScholes.py` génère `split_indices.json` dont dépendent RF et XGBoost pour leur évaluation hors échantillon.
 
 ```bash
-# Étape 1 — Random Forest (génère split_indices.json + rf_midprice.pkl)
-python RandomForest.py
+# Étape 1 — Analyse exploratoire
+python Statiqtiques_descriptives.py
 
-# Étape 2 — Black-Scholes (lit split_indices.json)
+# Étape 2 — Black-Scholes (génère outputs/split_indices.json)
 python BlackScholes.py
 
-# Étape 3 — MLP + comparaison finale (lit rf_midprice.pkl)
-python ReseauDeNeuronne.py
+# Étape 3 — Random Forest (lit split_indices.json)
+python RandomForest.py
+
+# Étape 4 — XGBoost (lit split_indices.json)
+python XGBoost.py
 ```
 
 ---
 
-## Outputs générés
+## 10. Outputs générés
 
-| Fichier | Type | Généré par |
-|---------|------|------------|
-| `rf_midprice_results.png` | Visualisations RF | Script 1 |
-| `outputs/rf_midprice.pkl` | Modèle RF sérialisé | Script 1 |
-| `outputs/split_indices.json` | Indices train/test | Script 1 |
-| `bs_midprice_results.png` | Visualisations BS | Script 2 |
-| `outputs/options_with_bs_midprice.csv` | Dataset enrichi avec prix BS et Grecques | Script 2 |
-| `mlp_midprice_comparison.png` | Comparaison complète 3 modèles | Script 3 |
-| `outputs/mlp_midprice.pkl` | Modèle MLP sérialisé | Script 3 |
+| Fichier | Description | Généré par |
+|---------|-------------|------------|
+| `outputs/split_indices.json` | Indices train/test partagés entre les scripts | Script 2 (BS) |
+| `outputs/options_with_bs_midprice.csv` | Dataset enrichi — prix BS, erreurs, Grecques | Script 2 (BS) |
+| `bs_midprice_results.png` | 9 graphiques Black-Scholes | Script 2 (BS) |
+| `rf_midprice_results.png` | 8 graphiques Random Forest | Script 3 (RF) |
+| `xgb_midprice_results.png` | 8 graphiques XGBoost | Script 4 (XGB) |
 
 ---
 
-## Métriques comparatives (test set 20%)
+## 11. Métriques comparatives
 
-Les valeurs exactes s'affichent dans le terminal à la fin de `ReseauDeNeuronne.py`. Le classement final est calculé automatiquement :
+Les trois modèles sont évalués sur le **même test set 20%**. Les valeurs exactes dépendent du dataset et des hyperparamètres retenus par la recherche aléatoire.
 
 ```
-TABLEAU DE SYNTHÈSE FINAL — TARGET : MID_PRICE — Test Set (20%)
+--- Performance sur le test set (20%) ---
 
-  Métrique           Black-Scholes    Random Forest              MLP
-  ──────────────────────────────────────────────────────────────
-  RMSE ($)            X.XXXX           X.XXXX ✓          X.XXXX
-  MAE  ($)            X.XXXX           X.XXXX            X.XXXX ✓
-  R²                  X.XXXXXX         X.XXXXXX ✓        X.XXXXXX
-  Biais ($)          +X.XXXX          +X.XXXX            X.XXXX ✓
-  MAPE (%)            XX.XX            X.XX ✓            X.XX
-
-  🏆 MEILLEUR MODÈLE (mid_price) : Random Forest  (ou MLP selon vos données)
+  Modèle            MAE ($)     RMSE ($)       R²
+  ──────────────────────────────────────────────────
+  Black-Scholes     X.XXXX      X.XXXX       X.XXXX
+  Random Forest     X.XXXX      X.XXXX       X.XXXX
+  XGBoost           X.XXXX      X.XXXX       X.XXXX
 ```
 
 ---
 
-## Paramètres clés
+## 12. Paramètres clés
 
-| Paramètre | Valeur | Fichier |
-|-----------|--------|---------|
-| `SEED` | 42 | Tous les scripts |
-| `R_FREE` | 0.043 (4.3%) | `BlackScholes.py`, `ReseauDeNeuronne.py` |
-| Test size | 20% | `RandomForest.py` |
-| CV folds | 5 | Tous les scripts ML |
-| MLP architecture baseline | `(128, 64)` ReLU | `ReseauDeNeuronne.py` |
-| Solver MLP | Adam | `ReseauDeNeuronne.py` |
+| Paramètre | Valeur | Fichier(s) |
+|-----------|--------|-----------|
+| `RANDOM_STATE` / `SEED` | 42 | Tous les scripts |
+| `R_FREE` | 0.043 (4.3% — taux Fed 2026) | `BlackScholes.py` |
+| Test size | 20% | `BlackScholes.py`, `RandomForest.py`, `XGBoost.py` |
+| CV folds | 5 | `RandomForest.py`, `XGBoost.py` |
+| `n_iter` RandomizedSearchCV | 100 | `RandomForest.py`, `XGBoost.py` |
+| Early stopping rounds | 50 | `XGBoost.py` |
+| Eval metric XGBoost | RMSE | `XGBoost.py` |
