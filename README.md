@@ -44,7 +44,145 @@ Les trois modèles de pricing sont évalués sur le **même test set (20% des do
 
 ---
 
-## 2. Pourquoi le mid_price ?
+## 2. Construction de la base de données des options
+
+
+Afin de constituer une base de données exploitable pour l’analyse et la modélisation des prix d’options, nous avons développé une fonction Python permettant d’extraire automatiquement les données de marché à partir de la plateforme Yahoo Finance.
+
+***Bibliothèques utilisées***
+
+La mise en œuvre de ce processus repose sur plusieurs bibliothèques Python :
+
+- **yfinance** : permet d’accéder aux données financières (actions, options, historiques de prix) depuis Yahoo Finance
+- **pandas** : utilisée pour manipuler et structurer les données sous forme de DataFrame
+- **datetime** : permet de gérer les dates, notamment pour le calcul du temps jusqu’à maturité
+- **os** : utilisé pour gérer les chemins de fichiers et sauvegarder les données
+
+Ces bibliothèques doivent être installées au préalable :
+
+```python
+pip install yfinance pandas datetime os
+```
+
+***Description de la fonction de construction des données***
+
+La fonction **build_options_dataset** a pour objectif de construire automatiquement un jeu de données complet contenant les caractéristiques principales des options pour un actif donné (dans notre cas Apple, ticker "AAPL").
+
+**Récupération des données de base**
+
+La fonction commence par :
+
+- créer un objet Ticker via yfinance
+- extraire le prix spot de l’actif (dernier prix de clôture disponible)
+- récupérer la liste des dates d’expiration des options disponibles
+
+**Extraction des chaînes d’options**
+
+Pour chaque date d’expiration :
+
+- les options call et put sont récupérées via option_chain
+- les deux types sont fusionnés dans un seul DataFrame
+- une variable "type" est ajoutée pour distinguer calls et puts
+
+**Sélection des variables pertinentes**
+
+Seules les colonnes utiles sont conservées :
+
+- strike : prix d’exercice
+- lastPrice, bid, ask : informations de prix
+- volume : liquidité
+- impliedVolatility : volatilité implicite
+- type : call ou put
+
+Les données de toutes les maturités sont concaténées en un seul DataFrame, constituant ainsi la base de données finale
+Les données sont ensuite exportées au format CSV dans un dossier local
+
+code : 
+***Création de la base de données***
+```python
+def build_options_dataset(ticker_symbol="AAPL", max_expirations=None):
+    ticker = yf.Ticker(ticker_symbol)
+
+    # spot price (reproductible à la date d'exécution)
+    spot_price = ticker.history(period="1d")["Close"].iloc[-1]
+
+    # expirations disponibles (liste déterministe à date donnée)
+    expirations = ticker.options
+
+    if max_expirations is not None:
+        expirations = expirations[:max_expirations]
+
+    all_data = []
+
+    # date "today" fixée pour reproductibilité (IMPORTANT)
+    today = datetime(2026, 4, 16)
+
+    for exp in expirations:
+        try:
+            opt = ticker.option_chain(exp)
+        except Exception:
+            continue
+
+        calls = opt.calls.copy()
+        puts = opt.puts.copy()
+
+        calls["type"] = "call"
+        puts["type"] = "put"
+
+        df = pd.concat([calls, puts], ignore_index=True)
+
+        # filtrage colonnes utiles
+        cols = [
+            "strike",
+            "lastPrice",
+            "bid",
+            "ask",
+            "volume",
+            "impliedVolatility",
+            "type"
+        ]
+
+        df = df[cols]
+
+        # features dérivées
+        df["spot"] = spot_price
+        df["moneyness"] = df["spot"] / df["strike"]
+
+        expiration_date = datetime.strptime(exp, "%Y-%m-%d")
+        df["time_to_maturity"] = (expiration_date - today).days / 365
+
+        df["expiration"] = exp
+        df["ticker"] = ticker_symbol
+
+        all_data.append(df)
+
+    full_df = pd.concat(all_data, ignore_index=True)
+
+    return full_df
+
+data = build_options_dataset("AAPL")
+```
+
+***Sauvegarde de la base***
+
+```python
+import os
+
+path = r"C:\Users\abeli\OneDrive\Documents\Deuxieme_Semestre\Projet_Pricing"
+
+# sécurité : créer le dossier si besoin
+os.makedirs(path, exist_ok=True)
+
+file_path = os.path.join(path, "options_dataset.csv")
+
+data.to_csv(file_path, index=False)
+
+print("Dataset sauvegardé ici :", file_path)
+
+```
+
+
+## 3. Pourquoi le mid_price ?
 
 La cible de tous les modèles est `mid_price = (bid + ask) / 2`.
 
@@ -57,7 +195,7 @@ Le `lastPrice` peut dater de plusieurs heures sur des options peu liquides, là 
 
 ---
 
-## 3. Structure du projet
+## 4. Structure du projet
 
 ```
 option-pricing/
@@ -80,7 +218,7 @@ option-pricing/
 
 ---
 
-## 4. Pipeline
+## 5. Pipeline
 
 ```
 options_dataset.csv
@@ -109,7 +247,7 @@ options_dataset.csv
 
 ---
 
-## 5. Description des scripts
+## 6. Description des scripts
 
 ### `Statiqtiques_descriptives.py` — Script 1/4
 
@@ -179,7 +317,7 @@ Modèle ML final. XGBoost avec triple split (train / validation / test), `Random
 
 ---
 
-## 6. Features utilisées
+## 7. Features utilisées
 
 Les 7 variables suivantes sont communes aux scripts RF et XGBoost :
 
@@ -197,7 +335,7 @@ Les 7 variables suivantes sont communes aux scripts RF et XGBoost :
 
 ---
 
-## 7. Installation
+## 8. Installation
 
 **Prérequis** : Python ≥ 3.10
 
@@ -213,7 +351,7 @@ pip install numpy pandas scikit-learn xgboost scipy matplotlib seaborn joblib
 
 ---
 
-## 8. Configuration
+## 9. Configuration
 
 > ⚠️ **À faire avant de lancer** — le chemin du fichier CSV est hardcodé dans chaque script. Il faut l'adapter à votre machine.
 
@@ -228,7 +366,7 @@ data = pd.read_csv("/home/user/data/options_dataset.csv")                 # macO
 
 ---
 
-## 9. Exécution
+## 10. Exécution
 
 > ⚠️ **Ordre obligatoire.** `BlackScholes.py` génère `split_indices.json` dont dépendent RF et XGBoost pour leur évaluation hors échantillon.
 
@@ -248,7 +386,7 @@ python XGBoost.py
 
 ---
 
-## 10. Outputs générés
+## 11. Outputs générés
 
 | Fichier | Description | Généré par |
 |---------|-------------|------------|
@@ -260,7 +398,7 @@ python XGBoost.py
 
 ---
 
-## 11. Métriques comparatives
+## 12. Métriques comparatives
 
 Les trois modèles sont évalués sur le **même test set 20%**. Les valeurs exactes dépendent du dataset et des hyperparamètres retenus par la recherche aléatoire.
 
@@ -276,7 +414,7 @@ Les trois modèles sont évalués sur le **même test set 20%**. Les valeurs exa
 
 ---
 
-## 12. Paramètres clés
+## 13. Paramètres clés
 
 | Paramètre | Valeur | Fichier(s) |
 |-----------|--------|-----------|
