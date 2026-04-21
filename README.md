@@ -1,5 +1,5 @@
 # Option Pricing with Machine Learning
-> Comparaison de trois approches pour prédire le **mid_price** d'options AAPL — Black-Scholes, Random Forest et réseau de neurones MLP.
+> Comparaison de trois approches pour prédire le **mid_price** d'options AAPL: Black-Scholes, Random Forest et réseau de neurones MLP.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?style=flat-square&logo=scikit-learn&logoColor=white)
@@ -26,7 +26,7 @@
 
 ## Objectif du projet
 
-Le pricing d'options est un problème central en finance de marché : déterminer la juste valeur d'un contrat d'option avant qu'il ne soit échangé. Le modèle de référence historique, Black-Scholes (1973), repose sur des hypothèses fortes — volatilité constante, marchés continus, absence de friction — qui sont rarement vérifiées en pratique. Il en résulte des biais systématiques, notamment sur les options très en dehors ou très en dedans de la monnaie (OTM/ITM), et sur les maturités courtes.
+Le pricing d'options est un problème central en finance de marché : déterminer la juste valeur d'un contrat d'option avant qu'il ne soit échangé. Le modèle de référence historique, Black-Scholes (1973), repose sur des hypothèses fortes: volatilité constante, marchés continus, absence de friction, qui sont rarement vérifiées en pratique. Il en résulte des biais systématiques, notamment sur les options très en dehors ou très en dedans de la monnaie (OTM/ITM), et sur les maturités courtes.
 
 Ce projet cherche à répondre à une question concrète : **les modèles de machine learning peuvent-ils faire mieux que Black-Scholes pour prédire le prix de marché réel d'une option ?**
 
@@ -36,7 +36,7 @@ Pour y répondre, trois approches sont comparées sur des données réelles d'op
 - **Random Forest** est un modèle d'ensemble qui apprend directement depuis les données sans hypothèse sur la dynamique du sous-jacent. Il capture les non-linéarités que BS ne peut pas modéliser.
 - **MLP (réseau de neurones multicouche)** est une approche plus flexible encore, capable d'apprendre des représentations profondes des features d'options.
 
-Les trois modèles sont évalués sur le même test set (20% des données, split stratifié) avec des métriques communes — RMSE, MAE, R², biais et MAPE — pour permettre une comparaison équitable et reproductible.
+Les trois modèles sont évalués sur le même test set (20% des données, split stratifié) avec des métriques communes: RMSE, MAE, R², biais et MAPE pour permettre une comparaison équitable et reproductible.
 
 ---
 
@@ -125,7 +125,7 @@ Modèle analytique de référence. Implémente la formule de Black-Scholes et ca
 
 **Paramètre financier :**
 ```python
-R_FREE = 0.043  # Taux Fed 2026 — à adapter si nécessaire
+R_FREE = 0.043  # Taux Fed 2026 à adapter si nécessaire
 ```
 
 ---
