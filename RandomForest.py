@@ -1,4 +1,12 @@
 """
+=============================================================================
+OPTION PRICING — TARGET : MID_PRICE
+SCRIPT 2/3 — Random Forest
+=============================================================================
+"""
+
+
+"""
 Option Pricing with Random Forest
 ---------------------------------
 Ce script implémente un modèle Random Forest pour prédire le prix moyen (mid_price)
