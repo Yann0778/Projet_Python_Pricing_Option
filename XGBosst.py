@@ -1,4 +1,12 @@
 """
+=============================================================================
+OPTION PRICING — TARGET : MID_PRICE
+SCRIPT 3/3 — XGBoost
+=============================================================================
+"""
+
+
+"""
 Pricing d'options avec XGBoost
 -------------------------------
 Ce script implémente un modèle de régression XGBoost pour prédire le prix moyen (mid_price)
