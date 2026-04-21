@@ -32,6 +32,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import warnings
+import requests
+import pandas as pd
+from io import StringIO
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -47,8 +50,34 @@ np.random.seed(RANDOM_STATE)
 # =============================================================================
 # 2. CHARGEMENT DES DONNÉES (ADAPTER LE CHEMIN)
 # =============================================================================
-data = pd.read_csv(r"C:\Users\ERAZER\Desktop\options_dataset.csv")
+def load_data_from_gdrive(url):
+    """
+    Télécharge un fichier CSV depuis un lien de partage Google Drive.
+    """
+    # Extraire l'ID du fichier depuis l'URL
+    if "file/d/" in url:
+        file_id = url.split("file/d/")[1].split("/")[0]
+    elif "id=" in url:
+        file_id = url.split("id=")[1]
+    else:
+        raise ValueError("Impossible d'extraire l'ID du fichier depuis l'URL fournie.")
+    
+    # Construire l'URL de téléchargement direct
+    download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    
+    print("Téléchargement du fichier depuis Google Drive...")
+    try:
+        response = requests.get(download_url)
+        response.raise_for_status()  # Vérifie si la requête a réussi
+        data = pd.read_csv(StringIO(response.text))
+        print("Téléchargement réussi !")
+        return data
+    except requests.exceptions.RequestException as e:
+        print(f"Erreur lors du téléchargement : {e}")
+        return None
 
+file_url = "https://drive.google.com/file/d/12KymJi6lZMmPRmaLB33klfMXRDTrIYJ1/view?usp=sharing"
+data = load_data_from_gdrive(file_url)
 # =============================================================================
 # 3. NETTOYAGE ET TRAITEMENT DES VALEURS MANQUANTES
 # =============================================================================
