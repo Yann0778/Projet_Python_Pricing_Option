@@ -1,4 +1,3 @@
-
 # =========================== IMPORTS ===========================
 import pandas as pd
 import numpy as np
@@ -224,31 +223,27 @@ def plot_iv_maturity_correlation(df):
     plt.tight_layout()
     plt.show()
 
-# =========================== EXÉCUTION PRINCIPALE ===========================
-def main():
-    # 1. Chargement des données
-    # À modifier selon l'emplacement du fichier CSV
-    file_path = r"C:\Users\ERAZER\Desktop\options_dataset.csv"
-    data = load_data(file_path)
-    
-    # 2. Nettoyage et feature engineering
-    data = clean_data(data)
-    
-    # 3. Aperçu des données
-    print("\n=== Valeurs manquantes ===")
-    print(data.isnull().sum())
-    print("\n=== Statistiques descriptives ===")
-    print(data.describe())
-    
-    # 4. Visualisations
-    print("\n=== Génération des graphiques ===")
-    plot_correlation_matrix(data)
-    plot_smile_by_expiration(data)
-    plot_iv_boxplot_by_expiration(data)
-    plot_iv_moneyness_distribution(data)
-    plot_iv_maturity_correlation(data)
-    
-    print("\nAnalyse terminée. Les graphiques ont été affichés.")
 
-if __name__ == "__main__":
-    main()
+# =========================== EXÉCUTION DIRECTE ===========================
+# 1. Chargement des données
+file_path = r"C:\Users\ERAZER\Desktop\options_dataset.csv"
+data = load_data(file_path)
+
+# 2. Nettoyage et feature engineering
+data = clean_data(data)
+
+# 3. Aperçu des données
+print("\n=== Valeurs manquantes ===")
+print(data.isnull().sum())
+print("\n=== Statistiques descriptives ===")
+print(data.describe())
+
+# 4. Visualisations
+print("\n=== Génération des graphiques ===")
+plot_correlation_matrix(data)
+plot_smile_by_expiration(data)
+plot_iv_boxplot_by_expiration(data)
+plot_iv_moneyness_distribution(data)
+plot_iv_maturity_correlation(data)
+
+print("\nAnalyse terminée. Les graphiques ont été affichés.")
