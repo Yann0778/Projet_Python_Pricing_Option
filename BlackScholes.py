@@ -5,6 +5,124 @@ SCRIPT 1/3 — BLACK-SCHOLES BASELINE
 =============================================================================
 """
 
+"""
+
+Description
+-----------
+Ce script implémente le modèle de Black-Scholes comme baseline théorique
+pour le pricing d’options, avec pour objectif la prédiction du prix de marché
+approximé par le mid_price (moyenne bid/ask).
+
+Le modèle utilise la volatilité implicite observée sur le marché
+(impliedVolatility), ce qui correspond à une calibration directe du modèle
+aux conditions de marché.
+
+Les résultats sont comparés aux prix réels afin d’analyser les biais
+structurels du modèle de Black-Scholes.
+
+
+Données utilisées
+----------------
+Le dataset contient des options avec les variables suivantes :
+- spot : prix du sous-jacent
+- strike : prix d’exercice
+- time_to_maturity : maturité (en années)
+- impliedVolatility : volatilité implicite
+- bid / ask : prix de marché
+- type : call / put
+
+Le mid_price est défini comme :
+    mid_price = (bid + ask) / 2
+
+
+Pipeline
+--------
+
+1. Chargement et préparation des données
+   - Lecture du dataset
+   - Construction du mid_price
+   - Suppression des valeurs aberrantes (prix <= 0)
+
+2. Feature engineering
+   - is_call (encodage binaire)
+   - volume (remplissage des valeurs manquantes)
+   - valeur intrinsèque
+   - log-moneyness = log(S / K)
+   - bid-ask spread
+
+3. Implémentation du modèle Black-Scholes
+   - Calcul des prix théoriques (call / put)
+   - Calcul des grecques : delta, gamma, vega, theta, rho
+
+4. Application du modèle
+   - Pricing sur l’ensemble du dataset
+   - Ajout des grecques au dataset
+
+5. Évaluation des performances
+   - RMSE (Root Mean Squared Error)
+   - MAE (Mean Absolute Error)
+   - R² (coefficient de détermination)
+   - Biais moyen (Mean Error)
+   - MAPE (Mean Absolute Percentage Error)
+
+   Évaluation effectuée :
+   - sur l’ensemble du dataset
+   - séparément pour calls et puts
+
+6. Analyse des biais structurels
+   - Biais par bucket de moneyness :
+       Deep OTM → Deep ITM
+   - Biais par maturité :
+       court terme → long terme
+
+   Objectif :
+   identifier les zones où Black-Scholes est systématiquement biaisé
+
+7. Évaluation hors échantillon
+   - Utilisation du même split que le modèle Random Forest
+   - Chargement des indices de test depuis un fichier JSON
+   - Comparaison BS vs mid_price sur le test set
+
+8. Visualisations
+   - Prédit vs Réel
+   - Résidus vs moneyness
+   - Résidus vs maturité
+   - Biais moyen par bucket
+   - Distribution des erreurs
+   - Distribution des grecques
+   - Erreur vs volatilité × √T
+
+9. Export des résultats
+   - Graphiques (PNG)
+   - Dataset enrichi avec :
+       prix BS, erreurs, grecques, features
+
+
+Objectif
+--------
+Fournir un benchmark théorique pour le pricing d’options et mettre en
+évidence les limites structurelles du modèle de Black-Scholes face aux
+prix de marché.
+
+Ce script sert de référence pour comparaison avec des modèles
+de machine learning (Random Forest, XGboost).
+
+
+Remarques importantes
+--------------------
+- Le modèle suppose :
+    * volatilité constante
+    * absence de sauts
+    * marchés frictionless
+
+- Les écarts observés (biais) reflètent :
+    * smile de volatilité
+    * microstructure du marché (spread)
+    * effets non capturés par BS
+
+=============================================================================
+"""
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
