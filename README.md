@@ -11,17 +11,19 @@
 ## Table des matières
 
 1. [Objectif du projet](#1-objectif-du-projet)
-2. [Pourquoi le mid_price ?](#2-pourquoi-le-mid_price-)
-3. [Structure du projet](#3-structure-du-projet)
-4. [Pipeline](#4-pipeline)
-5. [Description des scripts](#5-description-des-scripts)
-6. [Features utilisées](#6-features-utilisées)
-7. [Installation](#7-installation)
-8. [Configuration](#8-configuration)
-9. [Exécution](#9-exécution)
-10. [Outputs générés](#10-outputs-générés)
-11. [Métriques comparatives](#11-métriques-comparatives)
-12. [Paramètres clés](#12-paramètres-clés)
+2. Construction de la base de données des options
+3. [Pourquoi le mid_price ?](#2-pourquoi-le-mid_price-)
+4. [Structure du projet](#3-structure-du-projet)
+5. [Pipeline](#4-pipeline)
+6. [Description des scripts](#5-description-des-scripts)
+7. [Features utilisées](#6-features-utilisées)
+8. [Installation](#7-installation)
+9. [Configuration](#8-configuration)
+10. [Exécution](#9-exécution)
+11. [Outputs générés](#10-outputs-générés)
+12. [Métriques comparatives](#11-métriques-comparatives)
+13. [Paramètres clés](#12-paramètres-clés)
+Bibliographie 
 
 ---
 
@@ -425,3 +427,10 @@ Les trois modèles sont évalués sur le **même test set 20%**. Les valeurs exa
 | `n_iter` RandomizedSearchCV | 100 | `RandomForest.py`, `XGBoost.py` |
 | Early stopping rounds | 50 | `XGBoost.py` |
 | Eval metric XGBoost | RMSE | `XGBoost.py` |
+
+
+## Bibliographie 
+
+Zeyuan Li &  Qingdao Huang (2025). Option Pricing Using Ensemble Learning
+SERENADELLACORTE,LAURENSVANMIEGHEM,ANTONISPAPAPANTOLEON & ANDJONASPAPAZOGLOU-HENNIG (2026). MACHINE LEARNING FOR OPTION PRICING:
+AN EMPIRICAL INVESTIGATION OF NETWORK ARCHITECTURES
